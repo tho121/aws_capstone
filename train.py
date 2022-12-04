@@ -11,6 +11,7 @@ import os
 from PIL import ImageFile
 import argparse
 import json
+import shutil
 
 import torch.distributed as dist
 from torch.nn.parallel import DataParallel as DP
@@ -43,15 +44,14 @@ def test(model, test_loader, device):
             outputs=model(inputs)
             _, preds = torch.max(outputs, 1)
             running_corrects += torch.sum(preds == labels.data).item()
-            iters += 1
+            iters += inputs.shape[0]
             
             if iters % 100 == 0:
-                count = iters * inputs.shape[0]
-                print(count)
-                total_acc = 100 * running_corrects / count
+                print(iters)
+                total_acc = 100 * running_corrects / iters
                 print("Test set: running accuracy: {:.0f}%\n".format(total_acc))
 
-    total_acc = 100 * running_corrects / len(test_loader.dataset)
+    total_acc = 100 * running_corrects / iters
 
     print("Test set: Accuracy: {:.0f}%\n".format(total_acc))
     
@@ -87,16 +87,13 @@ def train(model, train_loader, criterion, optimizer, device, is_distributed):
             running_loss+=loss
             pred=pred.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
-            iters += 1
+            iters += data.shape[0]
             
             if iters % 100 == 0:
-                count = iters * data.shape[0]
-                print(count)
-                print(f"Loss {running_loss/count}, Accuracy {100*(correct/count)}%")
-    
-    
+                print(iters)
+                print(f"Loss {running_loss/iters}, Accuracy {100*(correct/iters)}%")
 
-    print(f"Loss {running_loss/len(train_loader.dataset)}, Accuracy {100*(correct/len(train_loader.dataset))}%")
+    print(f"Loss {running_loss/iters}, Accuracy {100*(correct/iters)}%")
 
     return model
     
@@ -174,12 +171,15 @@ def main(args):
 
     mean = [0.5300, 0.4495, 0.3624]
     std = [0.1691, 0.1476, 0.1114]
+
+    train_folder = args.train
+    test_folder = args.test
     
     train_transform = transforms.Compose([transforms.RandomHorizontalFlip(p=0.5), transforms.ToTensor(), transforms.Normalize(mean, std)])
     test_transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean, std)])
 
-    train_dataset = torchvision.datasets.ImageFolder(args.train, transform=train_transform)
-    test_dataset = torchvision.datasets.ImageFolder(args.test, transform=test_transform)
+    train_dataset = torchvision.datasets.ImageFolder(train_folder, transform=train_transform)
+    test_dataset = torchvision.datasets.ImageFolder(test_folder, transform=test_transform)
 
     batch_size = args.batch_size
     #batch_size //= dist.get_world_size()
@@ -196,7 +196,7 @@ def main(args):
     Remember that you will need to set up a way to get training data from S3
     '''
     
-    for e in range(1): #100 epochs
+    for e in range(args.epochs): #100 epochs
         model=train(model, train_loader, loss_criterion, optimizer, device, is_distributed)
 
         #if dist.get_rank() == 0:
@@ -221,6 +221,7 @@ if __name__=='__main__':
     parser.add_argument("--hosts", type=list, default=json.loads(os.environ["SM_HOSTS"]))
     parser.add_argument("--current-host", type=str, default=os.environ["SM_CURRENT_HOST"])
     
+
     args=parser.parse_args()
     
     main(args)
