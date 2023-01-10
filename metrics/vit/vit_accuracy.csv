@@ -1,0 +1,6 @@
+message
+"{'eval_loss': 1.1384522914886475, 'eval_accuracy': 0.4722272727272727, 'eval_runtime': 74.2301, 'eval_samples_per_second': 296.376, 'eval_steps_per_second': 4.634, 'epoch': 1.0}"
+"{'eval_loss': 1.0711150169372559, 'eval_accuracy': 0.5164090909090909, 'eval_runtime': 74.6199, 'eval_samples_per_second': 294.828, 'eval_steps_per_second': 4.61, 'epoch': 2.0}"
+"{'eval_loss': 1.0690926313400269, 'eval_accuracy': 0.5238181818181818, 'eval_runtime': 74.493, 'eval_samples_per_second': 295.33, 'eval_steps_per_second': 4.618, 'epoch': 3.0}"
+"{'eval_loss': 1.0901082754135132, 'eval_accuracy': 0.5252727272727272, 'eval_runtime': 74.5827, 'eval_samples_per_second': 294.975, 'eval_steps_per_second': 4.612, 'epoch': 4.0}"
+"{'eval_loss': 1.106437087059021, 'eval_accuracy': 0.5245454545454545, 'eval_runtime': 74.5638, 'eval_samples_per_second': 295.049, 'eval_steps_per_second': 4.613, 'epoch': 5.0}"
