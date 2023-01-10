@@ -11,7 +11,6 @@ import os
 from PIL import ImageFile
 import argparse
 import json
-import shutil
 
 import torch.distributed as dist
 from torch.nn.parallel import DataParallel as DP
@@ -25,13 +24,8 @@ def _average_gradients(model):
         param.grad.data /= size
 
 def test(model, test_loader, device):
-    '''
-    TODO: Complete this function that can take a model and a 
-          testing data loader and will get the test accuray/loss of the model
-          Remember to include any debugging/profiling hooks that you might need
-    '''
+
     model.eval()
-    running_loss=0
     running_corrects=0
     iters = 0
     
@@ -58,11 +52,7 @@ def test(model, test_loader, device):
     return total_acc
 
 def train(model, train_loader, criterion, optimizer, device, is_distributed):
-    '''
-    TODO: Complete this function that can take a model and
-          data loaders for training and will get train the model
-          Remember to include any debugging/profiling hooks that you might need
-    '''
+
     model.train()
     running_loss=0
     correct=0
@@ -98,18 +88,11 @@ def train(model, train_loader, criterion, optimizer, device, is_distributed):
     return model
     
 def net():
-    '''
-    TODO: Complete this function that initializes your model
-          Remember to use a pretrained model
-    '''
     model = models.resnet34(pretrained=True)
     feat_count = model.fc.in_features
 
-    #for param in model.parameters():
-    #    param.requires_grad = False   
-
-    model.fc = nn.Sequential(nn.Linear(feat_count, 5))
-    return model      #wrap model with data distributed parallel wrapper
+    model.fc = nn.Sequential(nn.Linear(feat_count, 5))  #hard coded number of classes
+    return model
 
 def create_data_loaders(data, batch_size, is_distributed):
     '''
@@ -132,9 +115,6 @@ def create_data_loaders(data, batch_size, is_distributed):
     return data_loader
 
 def main(args):
-    '''
-    TODO: Initialize a model by calling the net function
-    '''
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     
     if torch.cuda.is_available():
@@ -152,23 +132,18 @@ def main(args):
         print("Rank: " + str(host_rank))
 
 
-    model=net().to(device) #DDP(net().to(device))
+    model=net().to(device)
 
+    #wrap model with data distributed parallel wrapper
     if is_distributed:
         model=DP(model)
-
-    #local_rank = os.environ["LOCAL_RANK"] 
-    #torch.cuda.set_device(local_rank)
-    #model.cuda(local_rank)
     
-    '''
-    TODO: Create your loss and optimizer
-    '''
     loss_criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     
     ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+    #values determined in dataset.ipynb
     mean = [0.5300, 0.4495, 0.3624]
     std = [0.1691, 0.1476, 0.1114]
 
@@ -182,11 +157,7 @@ def main(args):
     test_dataset = torchvision.datasets.ImageFolder(test_folder, transform=test_transform)
 
     batch_size = args.batch_size
-    #batch_size //= dist.get_world_size()
     batch_size = max(batch_size, 1)
-
-    #local_rank = os.environ["LOCAL_RANK"]
-    #torch.cuda.set_device(local_rank)
 
     train_loader = create_data_loaders(train_dataset, batch_size, is_distributed)
     test_loader = create_data_loaders(test_dataset, batch_size, False)
@@ -196,10 +167,9 @@ def main(args):
     Remember that you will need to set up a way to get training data from S3
     '''
     
-    for e in range(args.epochs): #100 epochs
+    for e in range(args.epochs):
         model=train(model, train_loader, loss_criterion, optimizer, device, is_distributed)
 
-        #if dist.get_rank() == 0:
         test(model, test_loader, device)
 
         path = os.path.join(args.model_dir, "model.pth")
