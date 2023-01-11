@@ -48,7 +48,8 @@ The same dataset is used to train a ViT model to evaluate and compare the perfor
 **TODO**: What kind of model did you choose for this experiment and why? Give an overview of the types of hyperparameters that you specified and why you chose them. Also remember to evaluate the performance of your model.
 
 ## Machine Learning Pipeline
-**TODO:** Explain your project pipeline.
+The `dataset.ipynb` notebook parses the metadata from the AWS Warehouse dataset to identify the target images to download. These images are then downloaded locally and resized. They're then uploaded to the s3 bucket.
 
-## Standout Suggestions
-**TODO (Optional):** This is where you can provide information about any standout suggestions that you have attempted.
+The `sagemaker.ipynb` notebook starts the training job for the ResNet34 model. The `sagemaker_vit.ipynb` notebook starts training job for the ViT model. The `sagemaker_vit_local.ipynb` notebook is intended only for local debugging.
+
+Cloudwatch provides logs which can be filtered for the relevant metrics. They can be copied from Cloudwatch and saved a csv files. These files are expected to reside in the `metrics` folder. The `metrics.ipynd` notebook generates the appropriate graphs.
