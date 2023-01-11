@@ -21,6 +21,9 @@ The AWS Warehouse dataset features 535,234 image and json file pairs. Each image
 
 https://github.com/awslabs/open-data-docs/tree/main/docs/aft-vbi-pds
 
+![image](https://user-images.githubusercontent.com/4165980/211924369-5a9515cd-f56c-491d-a7a1-23be547ab534.png)
+
+
 ## Model Training
 
 Following the implementation outlined in the paper Amazon Inventory Reconciliation using AI by Pablo Rodriguez Bertorello, Sravan Sripada, and Nutchapol Dendumrongsup (https://github.com/pablo-tech/Image-Inventory-Reconciliation-with-SVM-and-CNN/blob/master/ProjectReport.pdf), this project replicates the training for a ResNet34 model to achieve similar test accuracy as a benchmark. The ResNet34 model uses the implementation from the Torchvision package with pretrained weights, and uses the following hyperparameters for training.
@@ -30,7 +33,6 @@ Following the implementation outlined in the paper Amazon Inventory Reconciliati
         'lr': 0.001, 
         'epochs': 10, 
     }
-
 
 The same dataset is used to train a ViT model to evaluate and compare the performance of transformer models in the computer vision domain. The ViT model uses the implementation from the Huggingface package, also with pretrained weights, and uses the following hyperparameters for training.
 
@@ -42,14 +44,19 @@ The same dataset is used to train a ViT model to evaluate and compare the perfor
         'dataloader_workers': 4,
         'model_name': "google/vit-base-patch16-224-in21k", # model which will be trained on
     }
+    
+    
+![image](https://user-images.githubusercontent.com/4165980/211923853-8759540d-4d3d-4f91-a7a8-450336330225.png)
+
+![image](https://user-images.githubusercontent.com/4165980/211923957-1955274d-f07e-4174-b163-3433df916e42.png)
 
 
+![image](https://user-images.githubusercontent.com/4165980/211923995-fc44528a-4ff0-402b-89ed-09dd8bab71b6.png)
 
-**TODO**: What kind of model did you choose for this experiment and why? Give an overview of the types of hyperparameters that you specified and why you chose them. Also remember to evaluate the performance of your model.
 
 ## Machine Learning Pipeline
 The `dataset.ipynb` notebook parses the metadata from the AWS Warehouse dataset to identify the target images to download. These images are then downloaded locally and resized. They're then uploaded to the s3 bucket.
 
 The `sagemaker.ipynb` notebook starts the training job for the ResNet34 model. The `sagemaker_vit.ipynb` notebook starts training job for the ViT model. The `sagemaker_vit_local.ipynb` notebook is intended only for local debugging.
 
-Cloudwatch provides logs which can be filtered for the relevant metrics. They can be copied from Cloudwatch and saved a csv files. These files are expected to reside in the `metrics` folder. The `metrics.ipynd` notebook generates the appropriate graphs.
+Cloudwatch provides logs which can be filtered for the relevant metrics. They can be copied from Cloudwatch and saved to csv files. These files are expected to reside in the `metrics` folder. The `metrics.ipynb` notebook generates the appropriate graphs.
